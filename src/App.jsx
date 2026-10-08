@@ -46,7 +46,9 @@ const pageLinks = [
 ]
 
 const formatMoney = (amount) => `Bs ${amount.toFixed(0)}`
-const pageUrl = (page) => page === 'home' ? '/' : `/?page=${page}`
+const pageUrl = (page) => page === 'home'
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}?page=${page}`
 
 function currentPage() {
   const page = new URLSearchParams(window.location.search).get('page')
