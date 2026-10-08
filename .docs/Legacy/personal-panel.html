@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de personal | Bella Napoli</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="section">
+    <div class="container">
+      <div class="checkout-card">
+        <div style="display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap">
+          <div>
+            <p class="eyebrow">ÁREA PRIVADA</p>
+            <h1 id="panel-title" style="font-size:42px;letter-spacing:-1px;margin-bottom:8px">Panel</h1>
+            <p id="panel-copy"></p>
+          </div>
+          <button id="logout" class="btn btn-secondary" type="button">Cerrar sesión</button>
+        </div>
+
+        <div class="feature-list" style="margin-top:30px">
+          <div><span aria-hidden="true">✓</span><strong>Sesión autenticada para esta demostración.</strong></div>
+          <div><span aria-hidden="true">✓</span><strong>El acceso no aparece como enlace directo en el footer público.</strong></div>
+          <div><span aria-hidden="true">✓</span><strong>Los roles se separan mediante la selección de perfil.</strong></div>
+        </div>
+
+        <a class="btn btn-primary" href="index.html" style="margin-top:25px">Volver al sitio</a>
+      </div>
+    </div>
+  </main>
+  <script>
+    if(sessionStorage.getItem("bellaStaffAuth") !== "true"){
+      location.replace("personal-login.html");
+    }else{
+      const role = sessionStorage.getItem("bellaStaffRole") || "personal";
+      const names = {caja:"Caja", cocina:"Cocina", repartidor:"Repartidor"};
+      document.getElementById("panel-title").textContent = "Panel de " + (names[role] || "Personal");
+      document.getElementById("panel-copy").textContent = "Bienvenido. Esta área está disponible después de iniciar sesión.";
+    }
+    document.getElementById("logout").addEventListener("click",()=>{
+      sessionStorage.clear();
+      location.replace("personal-login.html");
+    });
+  </script>
+</body>
+</html>

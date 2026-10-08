@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Bella Napoli - Pizzería artesanal."><title>Bella Napoli | Mi pedido</title><link rel="stylesheet" href="styles.css"></head><body>
+<a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="Bella Napoli, inicio"><img class="brand-logo" src="imagenes/logo-bella-napoli.png" alt="Bella Napóli Pizzería"></a>
+      <nav aria-label="Navegación principal">
+        <a href="index.html">Inicio</a><a href="menu.html">Menú</a><a href="nosotros.html">Nosotros</a><a href="pedido.html" aria-current="page">Mi pedido <span id="cart-count" class="cart-count" aria-label="0 productos">0</span></a>
+      </nav>
+    </div>
+  </header>
+<main id="contenido"><section class="page-hero"><img src="imagenes/pedido.png" alt="Pedido de pizza"><div><h1>Mi pedido</h1><p>Revisa tu orden</p><div class="checker"></div></div></section><section id="pedido" class="order-page"><div class="container order-layout"><div><p class="eyebrow">TU PEDIDO</p><h2 class="order-title">Tu carrito</h2><div id="cart-items" class="cart-box"><p class="empty-state">Tu carrito está vacío. Agrega una pizza desde el menú.</p></div><div class="cart-total"><span>Total</span><strong id="cart-total">Bs 0</strong></div><div id="live-total" class="sr-only" aria-live="polite"></div></div><div class="checkout-card"><p class="eyebrow">ENTREGA</p><h2 class="order-title">Datos de entrega</h2><form id="checkout-form" novalidate><div class="form-group"><label for="nombre">Nombre completo *</label><input id="nombre" name="nombre" type="text" autocomplete="name" required><p class="field-error" id="nombre-error"></p></div><div class="form-group"><label for="telefono">Teléfono *</label><input id="telefono" name="telefono" type="tel" inputmode="numeric" pattern="[0-9]{7,8}" maxlength="8" placeholder="Ej.: 70712345" required><p class="field-error" id="telefono-error"></p></div><div class="form-group"><label for="direccion">Dirección de entrega *</label><input id="direccion" name="direccion" type="text" placeholder="Calle, número y referencia" required><p class="field-error" id="direccion-error"></p></div><div class="form-group"><label for="referencia">Referencia</label><input id="referencia" name="referencia" type="text" placeholder="Ej.: casa con puerta azul"></div><div class="form-group"><label for="notas">Notas del pedido</label><textarea id="notas" name="notas" rows="3" placeholder="Indicaciones adicionales"></textarea></div><button class="btn btn-primary btn-full" type="submit">Confirmar pedido</button><div id="form-status" class="form-status" role="status" aria-live="polite"></div></form></div></div></section></main>
+  <footer class="site-footer">
+    <div class="container footer-grid"><div><div class="brand footer-brand"><img class="brand-logo" src="imagenes/logo-bella-napoli.png" alt="Bella Napóli Pizzería"></div><p>Pizza artesanal para compartir buenos momentos.</p></div><div><h3>Contacto</h3><p>📍 Cochabamba, Bolivia</p><p>📞 70712345</p></div><div><h3>Horario</h3><p>Lunes a domingo</p><p>11:00 – 22:00</p></div></div>
+    <div class="container photo-credit"></div>
+    <div class="container footer-bottom"><p>© 2026 Bella Napoli. Todos los derechos reservados.</p><a href="personal-login.html">Acceso de personal</a></div>
+  </footer>
+<script src="script.js"></script>
+</body></html>

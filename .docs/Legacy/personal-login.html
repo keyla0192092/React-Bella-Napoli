@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso de personal | Bella Napoli</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="section">
+    <div class="container" style="max-width:520px">
+      <div class="checkout-card">
+        <a class="brand" href="index.html" aria-label="Volver a Bella Napoli"><img class="brand-logo" src="imagenes/logo-bella-napoli.png" alt="Bella Napóli Pizzería"></a>
+        <p class="eyebrow" style="margin-top:35px">ÁREA PRIVADA</p>
+        <h1 style="font-size:42px;letter-spacing:-1px">Acceso de personal</h1>
+        <p>Ingresa con tus credenciales para acceder al panel correspondiente a tu rol.</p>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="usuario">Usuario</label>
+            <input id="usuario" type="text" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label for="clave">Contraseña</label>
+            <input id="clave" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="form-group">
+            <label for="rol">Rol</label>
+            <select id="rol" style="width:100%;min-height:46px;padding:10px;border:1px solid #bcae9e;border-radius:9px;background:#fffdf9">
+              <option value="caja">Caja</option>
+              <option value="cocina">Cocina</option>
+              <option value="repartidor">Repartidor</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" type="submit">Iniciar sesión</button>
+          <p id="login-status" class="form-status" role="alert" aria-live="polite"></p>
+        </form>
+
+        <p class="help-text" style="margin-top:20px"><strong>Demo académica:</strong> usuario <code>personal</code> y contraseña <code>bella2026</code>.</p>
+        <p class="help-text">En producción, la autenticación debe realizarse en un servidor; una validación JavaScript del navegador no sustituye un sistema de seguridad real.</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    document.getElementById("login-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      const user = document.getElementById("usuario").value.trim();
+      const pass = document.getElementById("clave").value;
+      const role = document.getElementById("rol").value;
+      const status = document.getElementById("login-status");
+
+      if(user === "personal" && pass === "bella2026"){
+        sessionStorage.setItem("bellaStaffAuth","true");
+        sessionStorage.setItem("bellaStaffRole",role);
+        location.href = "personal-panel.html";
+      }else{
+        status.className = "form-status error";
+        status.textContent = "Usuario o contraseña incorrectos.";
+      }
+    });
+  </script>
+</body>
+</html>
