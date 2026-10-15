@@ -1,6 +1,6 @@
 # Bella Napoli
 
-Migración del sitio de Bella Napoli a React y Vite. El diseño y las imágenes originales se conservan desde `.docs/Legacy`; esos archivos son la referencia y no se editan.
+Migración del sitio de Bella Napoli a React y Vite. Los estilos e imágenes usados por la aplicación están dentro de `src/assets`.
 
 ## Desarrollo y build
 
