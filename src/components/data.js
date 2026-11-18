@@ -5,13 +5,13 @@ import hawaianaPhoto from '../assets/hawaiana.jpg'
 import vegetarianaPhoto from '../assets/vegetariana.jpg'
 import carnivoraPhoto from '../assets/carnivora.webp'
 
-export const pizzas = [
-  { id: 1, category: 'clasicas', name: 'Margarita', description: 'Salsa de tomate, mozzarella y albahaca fresca.', base: 120, image: margaritaPhoto },
-  { id: 2, category: 'clasicas', name: 'Pepperoni', description: 'Mozzarella, salsa de tomate y pepperoni.', base: 135, image: pepperoniPhoto },
-  { id: 3, category: 'clasicas', name: 'Napolitana', description: 'Mozzarella, tomate, aceitunas, albahaca y orégano.', base: 130, image: napolitanaPhoto },
-  { id: 4, category: 'especiales', name: 'Hawaiana', description: 'Mozzarella, jamón y piña.', base: 135, image: hawaianaPhoto },
-  { id: 5, category: 'vegetarianas', name: 'Vegetariana', description: 'Mozzarella, champiñones, pimiento, cebolla y aceitunas.', base: 130, image: vegetarianaPhoto },
-  { id: 6, category: 'especiales', name: 'Carnívora', description: 'Mozzarella, jamón, pepperoni, tocino y carne.', base: 145, image: carnivoraPhoto },
+export const pizzaImages = [
+  { id: 1, image: margaritaPhoto },
+  { id: 2, image: pepperoniPhoto },
+  { id: 3, image: napolitanaPhoto },
+  { id: 4, image: hawaianaPhoto },
+  { id: 5, image: vegetarianaPhoto },
+  { id: 6, image: carnivoraPhoto },
 ]
 
 export const sizes = [

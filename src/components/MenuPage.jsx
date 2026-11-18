@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import menuBackground from '../assets/fondo menu.png'
-import { extras, pizzas, sizes } from './data.js'
+import { extras, pizzaImages, sizes } from './data.js'
 import { PageHero } from './PageHero.jsx'
 import { formatMoney, pageUrl } from './utils.js'
+import { listPizzas } from '../lib/store.js'
 
 function PizzaCard({ pizza, onCustomize }) {
   return (
@@ -20,7 +21,7 @@ function PizzaCard({ pizza, onCustomize }) {
   )
 }
 
-function PizzaCustomizer({ pizza, onClose, onAdd }) {
+function PizzaCustomizer({ pizza, onClose, onAdd, saving, status }) {
   const [sizeId, setSizeId] = useState('mediana')
   const [selectedExtras, setSelectedExtras] = useState([])
   const size = sizes.find((item) => item.id === sizeId)
@@ -76,7 +77,10 @@ function PizzaCustomizer({ pizza, onClose, onAdd }) {
         </fieldset>
         <div className="custom-total">Total: {formatMoney(total)}</div>
         <div className="sr-only" aria-live="polite" aria-atomic="true">Total actualizado: {formatMoney(total)}</div>
-        <button className="btn btn-primary btn-full" type="button" onClick={() => onAdd({ pizza, size, selectedExtras, total })}>Agregar al carrito</button>
+        {status && <p className="form-status error" role="alert">{status}</p>}
+        <button className="btn btn-primary btn-full" type="button" disabled={saving} onClick={() => onAdd({ pizza, size, selectedExtras, total })}>
+          {saving ? 'Guardando...' : 'Agregar al carrito'}
+        </button>
       </section>
     </div>
   )
@@ -85,22 +89,64 @@ function PizzaCustomizer({ pizza, onClose, onAdd }) {
 export function MenuPage({ addToCart }) {
   const [category, setCategory] = useState('todas')
   const [activePizza, setActivePizza] = useState(null)
-  const visiblePizzas = category === 'todas' ? pizzas : pizzas.filter((pizza) => pizza.category === category)
+  const [menuPizzas, setMenuPizzas] = useState([])
+  const [menuStatus, setMenuStatus] = useState('loading')
+  const [menuError, setMenuError] = useState('')
+  const [status, setStatus] = useState('')
+  const [saving, setSaving] = useState(false)
+  const visiblePizzas = category === 'todas' ? menuPizzas : menuPizzas.filter((pizza) => pizza.category === category)
   const closeCustomizer = () => setActivePizza(null)
 
-  function addCustomizedPizza({ pizza, size, selectedExtras, total }) {
+  useEffect(() => {
+    let active = true
+    listPizzas()
+      .then((rows) => {
+        const catalog = rows.map((row) => {
+          const presentation = pizzaImages.find((pizza) => pizza.id === row.id)
+          if (!presentation) throw new Error(`Missing image mapping for catalog pizza ${row.id}.`)
+          return {
+            ...presentation,
+            category: row.category,
+            name: row.name,
+            description: row.description,
+            base: Number(row.base_price),
+          }
+        })
+        if (active) {
+          setMenuPizzas(catalog)
+          setMenuStatus('ready')
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudo cargar el catálogo de pizzas.', error)
+        if (active) {
+          setMenuError('No se pudo cargar el menú. Inténtalo de nuevo más tarde.')
+          setMenuStatus('error')
+        }
+      })
+    return () => { active = false }
+  }, [])
+
+  async function addCustomizedPizza({ pizza, size, selectedExtras, total }) {
     const extrasList = selectedExtras.map((id) => extras.find((item) => item.id === id).name)
-    addToCart({
-      id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-      pizzaId: pizza.id,
-      name: pizza.name,
-      size: size.name,
-      extras: extrasList,
-      price: total,
-      quantity: 1,
-    })
-    closeCustomizer()
-    window.location.assign(pageUrl('order'))
+    setSaving(true)
+    setStatus('')
+    try {
+      await addToCart({
+        pizzaId: pizza.id,
+        name: pizza.name,
+        size: size.name,
+        extras: extrasList,
+        price: total,
+      })
+      closeCustomizer()
+      window.location.assign(pageUrl('order'))
+    } catch (error) {
+      console.error('No se pudo guardar el ítem del carrito.', error)
+      setStatus('No se pudo guardar la pizza. Revisa tu conexión e inténtalo de nuevo.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -114,13 +160,18 @@ export function MenuPage({ addToCart }) {
                 <button className={`menu-tab${category === key ? ' active' : ''}`} type="button" key={key} aria-pressed={category === key} onClick={() => setCategory(key)}>{label}</button>
               ))}
             </div>
-            <div className="pizza-grid">
-              {visiblePizzas.map((pizza) => <PizzaCard key={pizza.id} pizza={pizza} onCustomize={setActivePizza} />)}
-            </div>
+            {menuStatus === 'loading' && <p role="status">Cargando menú...</p>}
+            {menuStatus === 'error' && <p className="form-status error" role="alert">{menuError}</p>}
+            {menuStatus === 'ready' && !visiblePizzas.length && <p className="empty-state">No hay pizzas disponibles en esta categoría.</p>}
+            {menuStatus === 'ready' && (
+              <div className="pizza-grid">
+                {visiblePizzas.map((pizza) => <PizzaCard key={pizza.id} pizza={pizza} onCustomize={setActivePizza} />)}
+              </div>
+            )}
           </div>
         </section>
       </main>
-      {activePizza && <PizzaCustomizer pizza={activePizza} onClose={closeCustomizer} onAdd={addCustomizedPizza} />}
+      {activePizza && <PizzaCustomizer pizza={activePizza} onClose={closeCustomizer} onAdd={addCustomizedPizza} saving={saving} status={status} />}
     </>
   )
 }

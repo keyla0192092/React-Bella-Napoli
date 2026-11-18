@@ -1,60 +1,30 @@
 # Configuración de Supabase
 
-## Entorno e instalación
-
-- Sistema: Windows 10 x64.
-- Aplicación: React 19 con Vite, JavaScript y npm.
-- Node.js LTS 26.13.1 se instaló con WinGet (`OpenJS.NodeJS.LTS`).
-- Supabase CLI 3.1.0 se instaló como dependencia de desarrollo (`supabase`); el SDK `@supabase/supabase-js` también quedó instalado.
-- La carpeta de trabajo no contiene metadatos de Git.
-- Se inicializó `supabase/config.toml` con `supabase init`. No se inició Supabase local ni se instaló o utilizó Docker.
+La aplicación usa React 19, Vite, `@supabase/supabase-js` y Supabase CLI 3.1.0. `supabase/config.toml` ya existe; no es necesario iniciar contenedores Docker ni Supabase local. Ejecuta los comandos desde la carpeta interna del proyecto: `C:\Users\Windows\OneDrive\Escritorio\React-Bella-Napoli-main\React-Bella-Napoli-main` (contiene `package.json` y `supabase\`).
 
 ## Autenticación y proyecto Cloud
 
-- Autenticación: pendiente. `supabase projects list` informó que falta un access token.
-- Vinculación: pendiente. Aún no se ha seleccionado un proyecto ni ejecutado `supabase link`.
-- No se modificó ningún proyecto, tabla ni dato remoto.
+Se reutilizó el proyecto remoto saludable y enlazado `bella-napoli` (`ksgzovyiimrolmyzawfy`), en `sa-east-1` (São Paulo); no se creó otro proyecto. La CLI está autenticada. Con el access token de la CLI vigente, la conexión remota funcionó sin contraseña de base de datos.
 
-Para autenticar, genera un access token en [Supabase Account Tokens](https://supabase.com/dashboard/account/tokens), abre una terminal en la raíz del proyecto y ejecuta `npx supabase login`. Introduce el token únicamente en el prompt local; no lo compartas en el chat ni lo guardes en un archivo del proyecto. Después, ejecuta `npx supabase projects list` y selecciona el proyecto Cloud correcto antes de vincularlo.
+La migración `supabase/migrations/20261111200000_create_bella_napoli_catalog_and_cart.sql` está aplicada. Para futuras migraciones, desde la raíz del proyecto:
 
-## Archivos de integración
-
-- `supabase/config.toml`: configuración generada por la CLI para este repositorio.
-- `src/lib/supabase.js`: cliente centralizado; informa explícitamente si faltan las variables de entorno.
-- `.env.example`: plantilla sin credenciales reales.
-- `.gitignore`: excluye `.env` y `.env.*`, permitiendo únicamente `.env.example`.
-- `package.json` y `package-lock.json`: incluyen la CLI y el SDK.
-
-## Variables de entorno
-
-Copia `.env.example` a `.env.local` y reemplaza los valores con los de tu proyecto en Supabase Dashboard:
-
-```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_PUBLISHABLE_KEY
+```powershell
+npx.cmd supabase migration list --remote
+npx.cmd supabase db push --dry-run --remote
 ```
 
-Obtén la URL y la clave **publishable** desde la configuración/API del proyecto en el Dashboard. Las variables `VITE_*` se incluyen en el código del navegador; utiliza únicamente la clave publicable. Nunca pongas claves `service_role`, `secret` ni tokens de acceso en variables `VITE_*`, en `.env.example` o en el repositorio. `.env.local` está excluido de Git.
+Confirma que el destino sea `bella-napoli` y que el dry-run solo proponga las migraciones previstas. Después de revisar, aplica con `npx.cmd supabase db push --remote --yes` y vuelve a comprobar `migration list --remote`. El flag `--yes` es necesario en la ejecución no interactiva y confirma la mutación remota. Las consultas de verificación del esquema deben usar `npx.cmd supabase db query --remote --read-only "<consulta>"`.
 
-El cliente aún no está importado por la aplicación principal, por lo que la app existente no requiere las credenciales para arrancar. Al importar `src/lib/supabase.js`, el módulo exige ambas variables.
+La URL del proyecto y la clave publicable ya están en `.env.local`, que está ignorado por Git. No uses claves `service_role`, claves `secret`, contraseñas de base de datos ni access tokens en el navegador o en variables `VITE_*`. `.gitignore` excluye `.env` y `.env.*`, pero conserva `.env.example`.
 
-## Comandos útiles
+## Persistencia y permisos
 
-Ejecuta estos comandos desde la raíz del proyecto:
+- `supabase/migrations/20261111200000_create_bella_napoli_catalog_and_cart.sql` crea el catálogo (`pizzas`, lectura pública sin grants de escritura) y `cart_items` (grants CRUD a `authenticated` limitados por RLS al propietario; `anon` no tiene acceso).
+- `supabase/config.toml` habilita los inicios de sesión anónimos necesarios para asignar el carrito a `auth.uid()`. El remoto coincide en configuración de Auth; dos sesiones anónimas distintas confirmaron el aislamiento RLS.
+- El menú fusiona los datos públicos con las imágenes locales de `src/components/data.js`. El carrito se vuelve a leer de Supabase al iniciar la app y después de CRUD el cliente actualiza el estado desde el resultado confirmado.
+- Se verificaron desde la app alta, lectura, actualización, persistencia tras recargar, eliminación y vaciado del carrito. Se rechazó una cantidad inválida y se limpiaron las filas y cuentas temporales de prueba.
+- No se persiste el formulario de entrega ni la confirmación simulada; no existe una tabla de pedidos en el PDF.
 
-```bash
-npx supabase --version
-npx supabase login
-npx supabase projects list
-npx supabase link --project-ref <PROJECT_REF>
-npm run dev
-npm run build
-```
+`npx.cmd supabase config diff --remote` reportó una única diferencia no aplicada: `db.pooler.max_client_conn` es 600 en la configuración local y 200 en Cloud. No se empujó esa diferencia para evitar cambiar el pooler de producción; no afecta Auth ni el CRUD.
 
-## Pendiente
-
-1. Completar `npx supabase login` localmente y confirmar acceso con `npx supabase projects list`.
-2. Elegir el proyecto Cloud correcto y vincularlo con `npx supabase link --project-ref <PROJECT_REF>`.
-3. Crear `.env.local` con la URL del proyecto y la clave publicable.
-
-El flujo preparado es para Supabase Cloud. No ejecutes comandos de inicio local (`supabase start`) ni operaciones que apliquen migraciones o modifiquen la base de datos.
+Para ejecución local: `npm run dev`. Para controles: `npm run lint` y `npm run build`. El análisis del PDF, la matriz de correspondencia y el estado por verificar están en [.docs/supabase-integration/ANALISIS.md](./.docs/supabase-integration/ANALISIS.md) y [.docs/supabase-integration/CHECKLIST.md](./.docs/supabase-integration/CHECKLIST.md).
