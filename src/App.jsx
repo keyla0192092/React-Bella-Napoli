@@ -11,11 +11,11 @@ import { OrderPage } from './components/OrderPage.jsx'
 import { StaffPanel } from './components/StaffPanel.jsx'
 import { currentPage } from './components/utils.js'
 import {
-  clearCartItems,
   createCartItem,
   deleteCartItem,
   ensureGuestSession,
   listCartItems,
+  placeOrder,
   updateCartItemQuantity,
 } from './lib/store.js'
 
@@ -64,9 +64,11 @@ function App() {
     setCart((items) => items.filter((item) => item.id !== id))
   }
 
-  async function clearCart() {
-    await clearCartItems(cart.map((item) => item.id))
-    setCart([])
+  async function confirmOrder(order) {
+    const total = await placeOrder(order)
+    const orderedIds = new Set(order.item_ids)
+    setCart((items) => items.filter((item) => !orderedIds.has(item.id)))
+    return total
   }
 
   if (cartStatus === 'loading') {
@@ -98,7 +100,7 @@ function App() {
           cart={cart}
           updateCartItem={changeCartItemQuantity}
           removeCartItem={removeCartItem}
-          clearCart={clearCart}
+          confirmOrder={confirmOrder}
         />
       )
       break

@@ -112,23 +112,8 @@ export async function deleteCartItem(id) {
   if (!data) throw new Error('The cart item was not found or is not accessible.')
 }
 
-export async function clearCartItems(itemIds) {
-  if (!Array.isArray(itemIds) || itemIds.some((id) => typeof id !== 'string')) {
-    throw new Error('Invalid cart item identifiers.')
-  }
-  if (itemIds.length === 0) return
-
-  const userId = await ensureGuestSession()
-  const { data, error } = await getSupabaseClient()
-    .from('cart_items')
-    .delete()
-    .eq('user_id', userId)
-    .in('id', itemIds)
-    .select('id')
-
+export async function placeOrder(order) {
+  const { data, error } = await getSupabaseClient().rpc('place_order', order)
   if (error) throw error
-  const deletedIds = new Set(data.map((row) => row.id))
-  if (deletedIds.size !== itemIds.length || itemIds.some((id) => !deletedIds.has(id))) {
-    throw new Error('The cart changed before it could be cleared.')
-  }
+  return Number(data)
 }

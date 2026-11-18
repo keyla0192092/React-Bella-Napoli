@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import orderBackground from '../assets/pedido.png'
 import { PageHero } from './PageHero.jsx'
 import { formatMoney } from './utils.js'
 
-export function OrderPage({ cart, updateCartItem, removeCartItem, clearCart }) {
+export function OrderPage({ cart, updateCartItem, removeCartItem, confirmOrder }) {
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ message: '', kind: '' })
   const [saving, setSaving] = useState(false)
+  const pendingOrder = useRef(null)
+  const submitting = useRef(false)
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -56,6 +58,7 @@ export function OrderPage({ cart, updateCartItem, removeCartItem, clearCart }) {
 
   async function submitOrder(event) {
     event.preventDefault()
+    if (saving || submitting.current) return
     const form = event.currentTarget
     const nextErrors = validateForm(form)
     if (!cart.length) {
@@ -67,15 +70,29 @@ export function OrderPage({ cart, updateCartItem, removeCartItem, clearCart }) {
       form.querySelector('[aria-invalid="true"]')?.focus()
       return
     }
+    submitting.current = true
     setSaving(true)
     try {
-      await clearCart()
-      setStatus({ message: `¡Pedido recibido, ${form.nombre.value.trim()}! Total a pagar: ${formatMoney(total)}. La confirmación es una demostración: el pedido y los datos de entrega no se guardan ni se envían.`, kind: 'success' })
+      pendingOrder.current ??= {
+        request_id: crypto.randomUUID(),
+        item_ids: cart.map((item) => item.id),
+        expected_total: total,
+        customer_name: form.nombre.value.trim(),
+        phone: form.telefono.value,
+        delivery_address: form.direccion.value.trim(),
+        delivery_reference: form.referencia.value.trim(),
+        notes: form.notas.value.trim(),
+      }
+      const orderTotal = await confirmOrder(pendingOrder.current)
+      pendingOrder.current = null
+      setStatus({ message: `¡Pedido recibido! Total a pagar: ${formatMoney(orderTotal)}.`, kind: 'success' })
       form.reset()
     } catch (error) {
+      if (error.code) pendingOrder.current = null
       console.error('No se pudo completar la confirmación del pedido.', error)
-      setStatus({ message: 'No se pudo confirmar el pedido porque el carrito no pudo actualizarse. Inténtalo de nuevo.', kind: 'error' })
+      setStatus({ message: 'No se pudo verificar el pedido. Intenta confirmar de nuevo.', kind: 'error' })
     } finally {
+      submitting.current = false
       setSaving(false)
     }
   }
@@ -125,11 +142,11 @@ export function OrderPage({ cart, updateCartItem, removeCartItem, clearCart }) {
           <div className="checkout-card">
             <p className="eyebrow">ENTREGA</p><h2 className="order-title">Datos de entrega</h2>
             <form noValidate onSubmit={submitOrder} onBlur={validateOnBlur}>
-              <div className="form-group"><label htmlFor="nombre">Nombre completo *</label><input id="nombre" name="nombre" type="text" autoComplete="name" required aria-invalid={Boolean(errors.nombre)} aria-describedby={errors.nombre ? 'nombre-error' : undefined} /><p className="field-error" id="nombre-error">{errors.nombre}</p></div>
+              <div className="form-group"><label htmlFor="nombre">Nombre completo *</label><input id="nombre" name="nombre" maxLength="120" type="text" autoComplete="name" required aria-invalid={Boolean(errors.nombre)} aria-describedby={errors.nombre ? 'nombre-error' : undefined} /><p className="field-error" id="nombre-error">{errors.nombre}</p></div>
               <div className="form-group"><label htmlFor="telefono">Teléfono *</label><input id="telefono" name="telefono" type="tel" inputMode="numeric" pattern="[0-9]{7,8}" maxLength="8" placeholder="Ej.: 70712345" required aria-invalid={Boolean(errors.telefono)} aria-describedby={errors.telefono ? 'telefono-error' : undefined} /><p className="field-error" id="telefono-error">{errors.telefono}</p></div>
-              <div className="form-group"><label htmlFor="direccion">Dirección de entrega *</label><input id="direccion" name="direccion" type="text" placeholder="Calle, número y referencia" required aria-invalid={Boolean(errors.direccion)} aria-describedby={errors.direccion ? 'direccion-error' : undefined} /><p className="field-error" id="direccion-error">{errors.direccion}</p></div>
-              <div className="form-group"><label htmlFor="referencia">Referencia</label><input id="referencia" name="referencia" type="text" placeholder="Ej.: casa con puerta azul" /></div>
-              <div className="form-group"><label htmlFor="notas">Notas del pedido</label><textarea id="notas" name="notas" rows="3" placeholder="Indicaciones adicionales" /></div>
+              <div className="form-group"><label htmlFor="direccion">Dirección de entrega *</label><input id="direccion" name="direccion" maxLength="250" type="text" placeholder="Calle, número y referencia" required aria-invalid={Boolean(errors.direccion)} aria-describedby={errors.direccion ? 'direccion-error' : undefined} /><p className="field-error" id="direccion-error">{errors.direccion}</p></div>
+              <div className="form-group"><label htmlFor="referencia">Referencia</label><input id="referencia" name="referencia" maxLength="250" type="text" placeholder="Ej.: casa con puerta azul" /></div>
+              <div className="form-group"><label htmlFor="notas">Notas del pedido</label><textarea id="notas" name="notas" maxLength="500" rows="3" placeholder="Indicaciones adicionales" /></div>
               <button className="btn btn-primary btn-full" type="submit" disabled={saving}>{saving ? 'Procesando...' : 'Confirmar pedido'}</button>
               <div className={`form-status${status.kind ? ` ${status.kind}` : ''}`} role="status" aria-live="polite">{status.message}</div>
             </form>
